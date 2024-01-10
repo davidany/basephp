@@ -1,7 +1,6 @@
 <?php
 
-// Require the Composer autoloader, if not already loaded
-require 'vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 use DebugBar\StandardDebugBar;
 
