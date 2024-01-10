@@ -1,0 +1,87 @@
+version: '3.9'
+services:
+  project_name_change_me-php:
+    platform: linux/amd64
+    container_name: ${CONTAINER_NAME_PHP:-project_name_change_me-php}
+    networks:
+      dominion_net:
+        ipv4_address: "${PHP_IP_ADDRESS:-16.17.131.81}"
+    hostname: project_name_change_me
+    domainname: project_name_change_me.test
+    build:
+      context: ./
+      dockerfile: docker/${DOCKER_FILE}
+    ports:
+      - "${PHP_PORT:-80}:80"
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    links:
+      - project_name_change_me-mysql
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./:/var/www/html
+      - ./docker/python:/var/www/cgi-bin
+      - ./errors/php:/var/log/php
+      - ./errors/xdebug:/var/log/xdebug
+      - ./errors/sql/:/var/log/sql/
+      - ./errors/xdebug_trace:/var/log/xdebug/trace
+      - ./errors/httpd:/var/log/httpd
+  project_name_change_me-mysql:
+    container_name: "${CONTAINER_NAME_MYSQL:-project_name_change_me-mysql}"
+    command: --default-authentication-plugin=mysql_native_password
+    image: mysql:8
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./docker/mysql/db:/var/lib/mysql
+    networks:
+      - dominion_net
+    # restart: always
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DOCKER_DB:-project_name_change_me}"
+      MYSQL_USER: "${MYSQL_DOCKER_USER:-project_name_change_me}"
+      MYSQL_PASSWORD: "${MYSQL_DOCKER_PASSWORD:-project_name_change_me}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_DOCKER_ROOT_PASSWORD:-project_name_change_me}"
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+  project_name_change_me-postgres:
+    platform: linux/amd64
+    container_name: "${CONTAINER_NAME_POSTGRES:-project_name_change_me-postgres}"
+    image: postgres:latest
+    volumes:
+      - ./docker/postgres/db:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d/
+    networks:
+      - dominion_net
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-project_name_change_me}"
+      POSTGRES_USER: "${POSTGRES_USER:-project_name_change_me}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-project_name_change_me}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+  project_name_change_me-proxy:
+    container_name: '${CONTAINER_NAME_PROXY:-project_name_change_me-proxy}'
+    image: nginx
+    depends_on:
+      - ${CONTAINER_NAME_PHP}
+    build:
+      dockerfile: docker/Dockerfile.Nginx
+    networks:
+      - dominion_net
+    ports:
+      - 80:80
+      - 443:443
+      # - 8080:8080
+    volumes:
+      - ./docker/config/proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/config/ssl/project_name_change_me-dd-test.crt:/etc/nginx/project_name_change_me-dd-test.crt
+      - ./docker/config/ssl/project_name_change_me-dd-test.key:/etc/nginx/project_name_change_me-dd-test.key
+      - ./errors/${CONTAINER_NAME_PROXY}/httpd/:/var/log/httpd
+      - ./errors/${CONTAINER_NAME_PROXY}/php/:/var/log/php
+      - ./errors/${CONTAINER_NAME_PROXY}/php/:/var/log/nginx
+networks:
+  dominion_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "${DOCKER_SUBNET:-16.17.131.0/24}"
+        - subnet: "2001:3984:3989::/64"

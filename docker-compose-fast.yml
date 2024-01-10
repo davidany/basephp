@@ -1,0 +1,76 @@
+version: '3.9'
+services:
+  project_name_change_me-fast-php:
+    container_name: ${CONTAINER_NAME_PHP:-project_name_change_me-php}
+    networks:
+      dominion_net:
+        ipv4_address: "${PHP_IP_ADDRESS:-16.17.131.81}"
+    hostname: project_name_change_me
+    domainname: project_name_change_me.dd.test
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile.Fast
+    ports:
+      - "${PHP_PORT:-80}:80"
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    links:
+      - project_name_change_me-mysql
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./:/var/www/html
+      - ./docker/python:/var/www/cgi-bin
+      - ./errors/php:/var/log/php
+      - ./errors/xdebug:/var/log/xdebug
+      - ./errors/sql/:/var/log/sql/
+      - ./errors/xdebug_trace:/var/log/xdebug/trace
+      - ./errors/httpd:/var/log/httpd
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom-php.ini
+      - ./docker/mount/results-lastyear/:/results-lastyear
+  project_name_change_me-mysql:
+    container_name: project_name_change_me-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    image: mysql:8
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./docker/mysql/db:/var/lib/mysql
+    networks:
+      - dominion_net
+    # restart: always
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DOCKER_DB:-project_name_change_me}"
+      MYSQL_USER: "${MYSQL_DOCKER_USER:-project_name_change_me}"
+      MYSQL_PASSWORD: "${MYSQL_DOCKER_PASSWORD:-project_name_change_me}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_DOCKER_ROOT_PASSWORD:-project_name_change_me}"
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+  project_name_change_me-proxy:
+    container_name: '${CONTAINER_NAME_PROXY:-project_name_change_me-proxy}'
+    image: nginx
+    depends_on:
+      - project_name_change_me-fast-php
+    build:
+      dockerfile: docker/Dockerfile.Nginx
+    networks:
+      - dominion_net
+    ports:
+      - 81:80
+      - 453:443
+      # - 8080:8080
+    volumes:
+      - ./docker/config/proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/config/ssl/project_name_change_me-dd-test.crt:/etc/nginx/project_name_change_me-dd-test.crt
+      - ./docker/config/ssl/project_name_change_me-dd-test.key:/etc/nginx/project_name_change_me-dd-test.key
+      - ./errors/${CONTAINER_NAME_PROXY}/httpd/:/var/log/httpd
+      - ./errors/${CONTAINER_NAME_PROXY}/php/:/var/log/php
+      - ./errors/${CONTAINER_NAME_PROXY}/php/:/var/log/nginx
+volumes:
+  project_name_change_me-mysql:
+    driver: "local"
+networks:
+  dominion_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "${DOCKER_SUBNET:-16.17.131.0/24}"
+        - subnet: "2001:3984:3989::/64"

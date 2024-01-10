@@ -1,0 +1,10 @@
+# Rotate PHP error log file when it exceeds 500MB in size
+/var/log/php/error.log {
+    size 500M         # Maximum log file size
+    rotate 20          # Keep up to 5 rotated log files
+    missingok         # Don't throw an error if the log file is missing
+    notifempty        # Don't rotate the log file if it's empty
+    compress          # Compress rotated log files using gzip
+    delaycompress     # Don't compress the most recent rotated log file
+    create 0640 root root   # Create new log file with specified permissions and ownership after rotation
+}
