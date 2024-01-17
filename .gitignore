@@ -1,8 +1,7 @@
 .DS_Store
 .editorconfig
 .env
-.env.backup
-.env.production
+.idea
 .phpunit.result.cache
 /.fleet
 /.idea
