@@ -26,3 +26,9 @@ yarn-error.log
 .idea/basephp.iml
 .idea/php.xml
 .idea/basephp.iml
+.idea
+.env
+.vscode
+.DS_Store
+node_modules
+vendor
