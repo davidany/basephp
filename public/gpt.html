@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Platforms Iframes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+        .iframe-container {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="grid md:grid-cols-2 gap-4 p-4">
+        <div class="iframe-container">
+            <iframe src="https://www.perplexity.ai/"></iframe>
+        </div>
+        <div class="iframe-container">
+            <iframe src="https://chat.openai.com/"></iframe>
+        </div>
+        <div class="iframe-container">
+            <iframe src="https://bard.google.com/chat"></iframe>
+        </div>
+        <div class="iframe-container">
+            <iframe src="https://claude.ai/chats"></iframe>
+        </div>
+    </div>
+</body>
+</html>
