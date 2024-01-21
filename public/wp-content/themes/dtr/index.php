@@ -1,1 +1,6 @@
-This is the dtr theme
+<?php
+
+function dtr(){
+    echo "hello world";
+}
+dtr();
